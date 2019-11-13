@@ -1,8 +1,42 @@
 #include "stdio.h"
 #include "conio.h"
 #include "stdlib.h"
+#include "string.h"
 
-int main(void) {
+#define LOGIN_MAX	64
+#define SENHA_MAX	32
+
+struct usuario_t {
+	char login[64];
+	char senha[32];
+};
+
+void cadastrar()
+{
+	FILE *fp;
+	struct usuario_t usuario;
+	memset(&usuario, 0, sizeof(struct usuario_t));
+
+	printf("Cadastro de usuario: \n");
+	printf("Login: ");
+	scanf("%s", &usuario.login);
+	printf("Senha: ");
+	scanf("%s", &usuario.senha);
+
+	fp = fopen("login", "wb");
+	if (!fp) {
+		printf("Não foi possível criar o arquivo de login");
+		return;
+	}
+	fwrite(&usuario, sizeof(struct usuario_t), 1, fp);
+	fclose(fp);
+
+}
+
+int main(void) 
+{
+  FILE *fp;
+  struct usuario_t usuario;
   int op, mesas[10], status[10], i, nmesa, encontrou;
 
   for (i = 0; i < 10; i++) {
@@ -22,7 +56,8 @@ int main(void) {
     printf("4- Listar mesas ocupadas\n");
     printf("5- Listar mesas livres\n");
     printf("6- Listar todas as mesas\n");
-    printf("7- Sair\n");
+    printf("7- Tela de login\n");
+    printf("8- Sair\n");
     scanf("%d", & op);
     // O comando switch é um comando condicional, analisa a opção escolhida pelo usuário
 
@@ -125,11 +160,13 @@ int main(void) {
       if (encontrou == 0) {
         printf("Todas as mesas estao Ocupadas");
         getch();
-        break;
+      }
+      break;
 
-        case 6:
-          //Lista todas as mesassystem("cls);
-          printf("Todas as mesas\n\n");
+    case 6:
+        // Lista todas as mesas
+        system("cls");
+        printf("Todas as mesas\n\n");
         printf("========================\n\n");
         printf("Mesa Status\n\n");
         encontrou = 0; //Flag para saber se existe pelo menos uma mesa livre
@@ -142,14 +179,61 @@ int main(void) {
             printf("  %d     Disponível\n", mesas[i]);
           }
         }
-      }
       getch();
       break;
 
     case 7:
+
+      system("cls");
+      fp = fopen("login", "rb");
+
+      if (!fp) {
+        cadastrar();
+        fp = fopen("login", "rb");
+        if (!fp) {
+            printf("Nao foi possivel encontrar o arquivo de login\n");
+        }
+      }
+
+      memset(&usuario, 0, sizeof(struct usuario_t));
+
+      fread(&usuario, sizeof(struct usuario_t), 1, fp);
+      fclose(fp);
+
+      if (!strcmp("", usuario.login)) {
+        printf("Nenhum usuario encontrado, abrindo cadastro!\n");
+        cadastrar();
+        getch();
+        op = 1;
+      } else {
+  
+          char login[LOGIN_MAX];
+          char senha[SENHA_MAX];
+          
+          printf("Login: ");
+          scanf("%s", &login);
+          printf("Senha: ");
+          scanf("%s", &senha);
+          
+          if (!strcmp(login, usuario.login) && !strcmp(senha, usuario.senha)) {
+              printf("Bem vindo %s\n", usuario.login);
+              getch();
+              op = 1;
+          } else {
+              printf("Usuario ou senha invalidos!\n");
+              getch();
+              op = 1;
+          }
+
+      }
+
+      break;
+
+    case 8:
     default:
-      printf("Opção inválida!");
+      printf("Opcao invalida!");
       getch();
+      printf("Getch");
       break;
     } //switch
   } //while
